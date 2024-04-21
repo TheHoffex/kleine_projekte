@@ -3,51 +3,69 @@ import tkinter as tk
 class Settings:
     def __init__(self):
         self.size = 10
-        self.rows = 3
-        self.columns = 4
-        self.text = ['1', '2', '3', '+', '4', '5', '6', '-', '7', '8', '9', '=']
+        self.text = ['1', '2', '3', '4', '5', '6', '7', '8', '9']
+        self.operators = ['+', '-', '=']
+        self.font = 'Bookman 10'
 
-def main(root):
-    settings = Settings()
+class Main(tk.Frame):
 
-    erg_zeile = tk.Label(root, height=settings.size, background='lightblue', text='0')
-    erg_zeile.pack(fill=tk.X)
-    eingabe = tk.Frame(root)
-    eingabe.pack()
+    def __init__(self, master=None):
+        tk.Frame.__init__(self, master)
+        self.settings = Settings()
+    
+        self.erg_zeile = tk.Label(master, height=self.settings.size, background='lightblue', text='0', font=self.settings.font)
+        self.erg_zeile.pack(fill=tk.X)
+        self.eingabe = tk.Frame(master)
+        self.eingabe.pack()
+        self.newnumber = True
+        self.add = False
+        self.diff = False
+        self.init_buttons()
+        self.init_operators()
 
-    buttons = [tk.Button(eingabe, width=settings.size * 2, height=settings.size, text=settings.text[i], background='lightgray')
-               for i in range(settings.rows * settings.columns)]
+    def init_buttons(self):
+        self.buttons = [tk.Button(self.eingabe, width=self.settings.size * 2, height=self.settings.size, text=self.settings.text[i],
+                            command=lambda n=self.settings.text[i]: self.put_number(n), background='lightgray', font=self.settings.font)
+                for i in range(9)]
 
-    for b in buttons:
-        b['command'] = lambda b=b : fun(b)
+        for row in range(3):
+            for column in range(3):
+                i = row * 3 + column
+                self.buttons[i].grid(row=row, column=column)
 
-    for row in range(settings.rows):
-        for column in range(settings.columns):
-            i = row * settings.columns + column
-            buttons[i].grid(row=row, column=column)
+    def init_operators(self):
+        funs = [self.plus, self.minus, self.ergebnis]
+        for i, op in enumerate(self.settings.operators):
+            but = tk.Button(self.eingabe, width=self.settings.size * 2, height=self.settings.size, text=op,
+                            background='lightgray', command=funs[i], font=self.settings.font)
+            but.grid(row=i, column=3)
 
-    plus = False
-    minus = False
-    lösung = False
-    buffer = 0
+    def plus(self):
+        self.newnumber = True
+        self.add = True
+        self.zwischenerg = self.erg_zeile['text']
 
-    def fun(button):
-        x = button['text']
-        if x == '+':
-            plus = True
-            buffer = erg_zeile['text']
-        elif x == '-':
-            minus = True
-            buffer = erg_zeile['text']
-        elif x == '=':
-            pass     
+    def minus(self):
+        self.newnumber = True
+        self.diff = True
+        self.zwischenerg = self.erg_zeile['text']
+
+    def ergebnis(self):
+        if self.add:
+            self.erg_zeile['text'] = str(int(self.erg_zeile['text']) + int(self.zwischenerg))
+            self.add = False
+        elif self.diff:
+            self.erg_zeile['text'] = str(int(self.zwischenerg) - int(self.erg_zeile['text']))
+            self.add = False
+
+    def put_number(self, n):
+        if self.newnumber:
+            self.erg_zeile['text'] = n
+            self.newnumber = False
         else:
-            display_number(button['text'])
-
-    def display_number(n):
-        erg_zeile['text'] = n
+            self.erg_zeile['text'] += n
 
 if __name__ == '__main__':
     root = tk.Tk()
-    main(root)
+    main = Main(root)
     root.mainloop()
